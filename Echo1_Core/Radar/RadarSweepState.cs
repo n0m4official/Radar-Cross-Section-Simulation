@@ -1,10 +1,12 @@
-﻿namespace Echo1_Core.Radar;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-public class RadarSweepState
+namespace Echo1_Core.Radar
 {
-	public bool IsEnabled { get; set; }
-	public float StartAzimuth { get; set; } = -180f;
-	public float EndAzimuth { get; set; } = 180f;
-	public float CurrentAzimuth { get; set; }
-	public float StepSize { get; set; } = 0.5f;
+	internal class RadarSweepState
+	{
+	}
 }

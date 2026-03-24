@@ -1,5 +1,4 @@
-﻿using Echo1.Core.Radar;
-using Echo1_Core.Geometry;
+﻿using Echo1_Core.Geometry;
 using System.Numerics;
 
 namespace Echo1.Core.Engine;
@@ -41,15 +40,6 @@ public static class PhysicalOpticsKernel
 					+ coherentSum.Imaginary * coherentSum.Imaginary;
 		// σ = |E_s|² / (4π) — simplified monostatic normalisation
 		return mag2 / (4.0 * Math.PI);
-	}
-
-	// Inside PhysicalOpticsKernel.cs
-	public static float CalculateFacetRcs(Facet facet, RadarConfig config, Vector3 kHat)
-	{
-		// For the heatmap/individual facet display, we return the local RCS in dBsm
-		var contribution = FacetContribution(facet, kHat, config.WaveNumber);
-		double m2 = TotalRcsM2(contribution);
-		return ToDbsm(m2);
 	}
 
 	public static float ToDbsm(double rcsM2)

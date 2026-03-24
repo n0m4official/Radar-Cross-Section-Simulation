@@ -1,26 +1,12 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Echo1.Wpf.ViewModels
+namespace Echo1_Wpf.ViewModels
 {
-	public class MainViewModel : INotifyPropertyChanged
+	internal class MainViewModel
 	{
-		private float _currentRcs;
-		public float CurrentRcs
-		{
-			get => _currentRcs;
-			set { _currentRcs = value; OnPropertyChanged(); }
-		}
-
-		private string _status = "Ready";
-		public string Status
-		{
-			get => _status;
-			set { _status = value; OnPropertyChanged(); }
-		}
-
-		public event PropertyChangedEventHandler? PropertyChanged;
-		protected void OnPropertyChanged([CallerMemberName] string name = null!)
-			=> PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 	}
 }
