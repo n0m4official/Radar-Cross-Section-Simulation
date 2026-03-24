@@ -16,7 +16,7 @@ public sealed class RcsCache
 
 	public bool TryGet(CacheKey key, out RcsResult result)
 	{
-		result = _store[key.ToString()] as RcsResult;
+		result = _store[key.ToString()] as RcsResult ?? null!;
 		return result != null;
 	}
 

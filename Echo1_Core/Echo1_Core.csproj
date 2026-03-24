@@ -1,15 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
+	<PropertyGroup>
+		<TargetFramework>net9.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<RootNamespace>Echo1.Core</RootNamespace>
+		<AssemblyName>Echo1.Core</AssemblyName>
+	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="ComputeSharp" Version="3.*" />
-		<PackageReference Include="System.Runtime.Caching" Version="8.0.1" />
+		<PackageReference Include="System.Runtime.Caching" Version="8.*" />
 	</ItemGroup>
-
 </Project>

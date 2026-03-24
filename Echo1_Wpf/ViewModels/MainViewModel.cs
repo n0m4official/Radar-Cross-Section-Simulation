@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
-namespace Echo1_Wpf.ViewModels
+namespace Echo1.Wpf.ViewModels;
+
+public class MainViewModel : INotifyPropertyChanged
 {
-	internal class MainViewModel
-	{
-	}
+	public event PropertyChangedEventHandler? PropertyChanged;
+	protected void OnPropertyChanged([CallerMemberName] string? name = null)
+		=> PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

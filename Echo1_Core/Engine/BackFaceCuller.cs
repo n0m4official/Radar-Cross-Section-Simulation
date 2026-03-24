@@ -1,15 +1,11 @@
-﻿using Echo1_Core.Geometry;
+﻿using Echo1.Core.Geometry;
 using System.Numerics;
 
-namespace Echo1_Core.Engine
+namespace Echo1.Core.Engine;
+
+public static class BackFaceCuller
 {
-	internal static class BackFaceCuller
-	{
-		// Determines if a facet is visible to the radar source
-		public static bool IsVisible(Facet facet, Vector3 incidentDir)
-		{
-			// Incident direction is 'toward' the target, so we negate it for the dot product
-			return Vector3.Dot(facet.Normal, -incidentDir) > 0;
-        }
-	}
+	/// <summary>Returns only facets whose normal points toward the radar.</summary>
+	public static IEnumerable<Facet> Cull(IEnumerable<Facet> facets, Vector3 radarDir)
+		=> facets.Where(f => Vector3.Dot(f.Normal, radarDir) > 0f);
 }

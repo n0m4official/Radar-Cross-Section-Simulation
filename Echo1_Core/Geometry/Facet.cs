@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace Echo1_Core.Geometry;
+namespace Echo1.Core.Geometry;
 
 /// <summary>
 /// Represents one triangular facet of the target mesh

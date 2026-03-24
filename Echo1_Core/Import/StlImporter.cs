@@ -1,5 +1,4 @@
 ﻿using Echo1.Core.Geometry;
-using Echo1_Core.Geometry;
 using System.Globalization;
 using System.Numerics;
 

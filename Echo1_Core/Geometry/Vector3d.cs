@@ -1,4 +1,4 @@
-﻿namespace Echo1_Core.Geometry
+﻿namespace Echo1.Core.Geometry
 {
 	public record struct Vector3d(double X, double Y, double Z)
 	{

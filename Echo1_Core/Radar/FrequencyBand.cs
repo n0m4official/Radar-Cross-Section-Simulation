@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Echo1_Core.Radar
+namespace Echo1.Core.Radar
 {
 	internal class FrequencyBand
 	{

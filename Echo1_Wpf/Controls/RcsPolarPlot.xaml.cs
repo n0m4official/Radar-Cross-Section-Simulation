@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Echo1_Wpf.Controls
+namespace Echo1.Wpf.Controls
 {
 	/// <summary>
 	/// Interaction logic for RcsPolarPlot.xaml

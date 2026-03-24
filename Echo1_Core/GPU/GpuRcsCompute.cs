@@ -1,18 +1,18 @@
 ﻿using ComputeSharp;
-using System;
-using System.Numerics;
-using Echo1.Core.Radar;
 using Echo1.Core.Gpu;
+using Echo1.Core.Radar;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
+namespace Echo1.Core.Gpu;
 
-namespace Echo1_Core.Gpu;
-
+[SupportedOSPlatform("windows")]
 public sealed class GpuRcsCompute : IDisposable
 {
 	private readonly GraphicsDevice _device;
 
-	public GpuRcsCompute()
-		=> _device = GraphicsDevice.GetDefault();
+	public GpuRcsCompute() => _device = GraphicsDevice.GetDefault();
 
 	public Complex ComputeFacetContributions(FacetGpuData[] facets, RadarConfig radar)
 	{
@@ -22,26 +22,14 @@ public sealed class GpuRcsCompute : IDisposable
 
 		var d = radar.IncidentDirection;
 		var kHat = new float4(d.X, d.Y, d.Z, (float)radar.WaveNumber);
-
-		var shader = new RcsShader
-		{
-			Facets = facetBuf,
-			Real = realBuf,
-			Imag = imagBuf,
-			KHat = kHat
-		};
+		var shader = new RcsShader(facetBuf, realBuf, imagBuf, kHat);
 
 		_device.For(facets.Length, shader);
 
 		float[] re = realBuf.ToArray();
 		float[] im = imagBuf.ToArray();
-
 		double sumR = 0, sumI = 0;
-		for (int i = 0; i < re.Length; i++)
-		{
-			sumR += re[i];
-			sumI += im[i];
-		}
+		for (int i = 0; i < re.Length; i++) { sumR += re[i]; sumI += im[i]; }
 
 		return new Complex(sumR, sumI);
 	}

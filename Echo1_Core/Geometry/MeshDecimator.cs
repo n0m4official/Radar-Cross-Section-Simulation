@@ -1,4 +1,4 @@
-﻿using Echo1_Core.Geometry;
+﻿using Echo1.Core.Geometry;
 
 namespace Echo1.Core.Geometry;
 

@@ -1,7 +1,6 @@
-﻿using Echo1_Core.Geometry;
-using Echo1_Core.Engine;
+﻿using Echo1.Core.Engine;
+using Echo1.Core.Geometry;
 using System.Numerics;
-using System.Collections.Concurrent;
 
 namespace Echo1.Core.Geometry;
 
@@ -14,7 +13,6 @@ public sealed class RcsMesh
 	public record struct Edge(int Index, Vector3 A, Vector3 B, float WedgeAngle);
 	public Edge[] Edges { get; private set; }
 
-	// LOD levels — pre-decimated at load time
 	public RcsMesh[] LodLevels { get; private set; } = Array.Empty<RcsMesh>();
 
 	public RcsMesh(string name, Facet[] facets)
@@ -22,10 +20,9 @@ public sealed class RcsMesh
 		Name = name;
 		Facets = facets;
 		Bounds = BoundingBox.FromFacets(facets);
-		Edges = new Edge[Facets.Length];
+		Edges = Array.Empty<Edge>();   // populated by BuildEdges()
 	}
 
-	/// <summary>Select LOD level based on pixel-coverage heuristic.</summary>
 	public RcsMesh SelectLod(float distanceMetres, float fovDegrees)
 	{
 		if (LodLevels.Length == 0) return this;
@@ -44,4 +41,46 @@ public sealed class RcsMesh
 			.Select(t => MeshDecimator.Decimate(this, t))
 			.ToArray();
 	}
+
+	/// <summary>
+	/// Extract unique edges and estimate wedge angles for diffraction.
+	/// Call once after loading.
+	/// </summary>
+	public void BuildEdges()
+	{
+		var edgeMap = new Dictionary<(int, int), (Vector3 A, Vector3 B, Vector3 N1)>();
+		var result = new List<Edge>();
+
+		for (int fi = 0; fi < Facets.Length; fi++)
+		{
+			var f = Facets[fi];
+			var verts = new[] { f.V0, f.V1, f.V2 };
+			for (int ei = 0; ei < 3; ei++)
+			{
+				var a = verts[ei];
+				var b = verts[(ei + 1) % 3];
+				// Canonical key — lower index first
+				var key = GetHashCode(a) < GetHashCode(b)
+					? (GetHashCode(a), GetHashCode(b))
+					: (GetHashCode(b), GetHashCode(a));
+
+				if (edgeMap.TryGetValue(key, out var existing))
+				{
+					// Shared edge — compute dihedral angle
+					float cos = Vector3.Dot(existing.N1, f.Normal);
+					float angle = MathF.Acos(Math.Clamp(cos, -1f, 1f));
+					result.Add(new Edge(result.Count, a, b, angle));
+					edgeMap.Remove(key);
+				}
+				else
+				{
+					edgeMap[key] = (a, b, f.Normal);
+				}
+			}
+		}
+		Edges = result.ToArray();
+	}
+
+	private static int GetHashCode(Vector3 v)
+		=> HashCode.Combine(v.X, v.Y, v.Z);
 }

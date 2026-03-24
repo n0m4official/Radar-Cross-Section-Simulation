@@ -3,7 +3,11 @@ using Echo1.Core.Geometry;
 using Echo1.Core.Import;
 using Echo1.Core.Radar;
 using Echo1.Wpf.Rendering;
+using HelixToolkit.Wpf;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Media3D;
 using System.Windows.Threading;
 
 namespace Echo1.Wpf;
@@ -16,15 +20,40 @@ public partial class MainWindow : Window
 	private SceneBuilder _builder = new();
 	private FreeFlyCamera? _flyCamera;
 
-	private DispatcherTimer _sweepTimer = new() { Interval = TimeSpan.FromMilliseconds(33) }; // ~30 fps
-	private DispatcherTimer _renderTimer = new() { Interval = TimeSpan.FromMilliseconds(16) }; // ~60 fps
+	// Created in code — no XAML parser dependency on HelixToolkit
+	private readonly HelixViewport3D _viewport;
+	private readonly ModelVisual3D _meshVisual = new();
+
+	private readonly DispatcherTimer _sweepTimer =
+		new() { Interval = TimeSpan.FromMilliseconds(33) };
+	private readonly DispatcherTimer _renderTimer =
+		new() { Interval = TimeSpan.FromMilliseconds(16) };
 
 	public MainWindow()
 	{
 		InitializeComponent();
+
+		// Build viewport in code and inject into the Border placeholder
+		_viewport = new HelixViewport3D
+		{
+			Background = System.Windows.Media.Brushes.Transparent,
+			ZoomExtentsWhenLoaded = true,
+			Camera = new PerspectiveCamera
+			{
+				Position = new Point3D(0, 0, 50),
+				LookDirection = new Vector3D(0, 0, -1),
+				UpDirection = new Vector3D(0, 1, 0),
+				FieldOfView = 60
+			}
+		};
+
+		_viewport.Children.Add(new SunLight());
+		_viewport.Children.Add(_meshVisual);
+		ViewportHost.Child = _viewport;
+
 		_sweepTimer.Tick += SweepTick;
 		_renderTimer.Tick += RenderTick;
-		_flyCamera = new FreeFlyCamera(Viewport);
+		_flyCamera = new FreeFlyCamera(_viewport);
 	}
 
 	private async void LoadModel_Click(object sender, RoutedEventArgs e)
@@ -35,20 +64,18 @@ public partial class MainWindow : Window
 		};
 		if (dlg.ShowDialog() != true) return;
 
-		// Load off the UI thread
+		string path = dlg.FileName;
 		_mesh = await Task.Run(() =>
-			dlg.FileName.EndsWith(".stl", StringComparison.OrdinalIgnoreCase)
-				? StlImporter.Load(dlg.FileName)
-				: ObjImporter.Load(dlg.FileName));
+			path.EndsWith(".stl", StringComparison.OrdinalIgnoreCase)
+				? StlImporter.Load(path)
+				: ObjImporter.Load(path));
 
 		_mesh.BuildLods(new[] { _mesh.Facets.Length / 4, _mesh.Facets.Length / 16 });
-
-		// Initial render
+		_mesh.BuildEdges();
 		UpdateScene();
 		_renderTimer.Start();
 	}
 
-	// Radar sweep tick — update angle, recompute RCS
 	private void SweepTick(object? s, EventArgs e)
 	{
 		_radar.AzimuthDeg = (_radar.AzimuthDeg + _radar.SweepRateDegPerSec * 0.033f) % 360f;
@@ -56,15 +83,16 @@ public partial class MainWindow : Window
 		RecomputeRcs();
 	}
 
-	// Render tick — update heatmap geometry
 	private void RenderTick(object? s, EventArgs e) => UpdateScene();
 
 	private void RecomputeRcs()
 	{
 		if (_mesh is null) return;
+		var meshSnap = _mesh;
+		var radarSnap = _radar;
 		Task.Run(() =>
 		{
-			var result = _engine.Compute(_mesh, _radar);
+			var result = _engine.Compute(meshSnap, radarSnap);
 			Dispatcher.InvokeAsync(() =>
 			{
 				RcsDbLabel.Content = $"{result.TotalDbsm:F2} dBsm";
@@ -77,7 +105,7 @@ public partial class MainWindow : Window
 	{
 		if (_mesh is null) return;
 		var scene = _builder.BuildHeatmapScene(_mesh, -40f, 10f);
-		MeshVisual.Content = scene;
+		_meshVisual.Content = scene;
 	}
 
 	private void FreqSlider_Changed(object s, RoutedPropertyChangedEventArgs<double> e)
@@ -103,4 +131,6 @@ public partial class MainWindow : Window
 		if (SweepToggle.IsChecked == true) _sweepTimer.Start();
 		else _sweepTimer.Stop();
 	}
+
+	private void Window_KeyDown(object sender, KeyEventArgs e) { }
 }

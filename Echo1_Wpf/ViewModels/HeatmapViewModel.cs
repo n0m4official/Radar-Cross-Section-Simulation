@@ -1,12 +1,2 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Echo1_Wpf.ViewModels
-{
-	internal class HeatmapViewModel
-	{
-	}
-}
+﻿namespace Echo1.Wpf.ViewModels;
+public sealed class HeatmapViewModel { }
