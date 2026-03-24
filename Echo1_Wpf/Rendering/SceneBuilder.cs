@@ -1,7 +1,8 @@
-﻿using Echo1_Wpf.Rendering;
-using HelixToolkit.Wpf;
-using System.Windows.Media;
+﻿using System.Windows.Media;
 using System.Windows.Media.Media3D;
+using Echo1.Core.Geometry;
+using HelixToolkit.Wpf;
+using Echo1.Wpf.Rendering;
 
 namespace Echo1.Wpf.Rendering;
 
@@ -9,50 +10,57 @@ public sealed class SceneBuilder
 {
 	private readonly FacetMaterialCache _matCache = new();
 
-	/// <summary>
-	/// Build a MeshGeometry3D from RcsMesh and apply per-facet heatmap color.
-	/// Returns a Model3DGroup containing one GeometryModel3D per material group.
-	/// Called each RCS frame on the render thread.
-	/// </summary>
 	public Model3DGroup BuildHeatmapScene(RcsMesh mesh, float minDb, float maxDb)
 	{
 		var group = new Model3DGroup();
-
-		// Group facets by quantised color bucket (reduces geometry batches)
 		const int Buckets = 64;
-		var buckets = new MeshBuilder[Buckets];
-		for (int i = 0; i < Buckets; i++) buckets[i] = new MeshBuilder(false, false);
+
+		// One MeshGeometry3D per color bucket
+		var positions = new Point3DCollection[Buckets];
+		var indices = new Int32Collection[Buckets];
+		var vertCounts = new int[Buckets];
+
+		for (int i = 0; i < Buckets; i++)
+		{
+			positions[i] = new Point3DCollection();
+			indices[i] = new Int32Collection();
+		}
 
 		foreach (var facet in mesh.Facets)
 		{
 			float t = maxDb > minDb
 				? (facet.RcsDb - minDb) / (maxDb - minDb)
 				: 0.5f;
-			t = Math.Clamp(t, 0f, 1f);
+			t = Math.Max(0f, Math.Min(1f, t));
 			int bucket = (int)(t * (Buckets - 1));
 
-			var b = buckets[bucket];
-			b.AddTriangle(
-				facet.V0.ToPoint3D(),
-				facet.V1.ToPoint3D(),
-				facet.V2.ToPoint3D());
+			int baseIdx = vertCounts[bucket];
+			positions[bucket].Add(facet.V0.ToPoint3D());
+			positions[bucket].Add(facet.V1.ToPoint3D());
+			positions[bucket].Add(facet.V2.ToPoint3D());
+			indices[bucket].Add(baseIdx);
+			indices[bucket].Add(baseIdx + 1);
+			indices[bucket].Add(baseIdx + 2);
+			vertCounts[bucket] += 3;
 		}
 
 		for (int i = 0; i < Buckets; i++)
 		{
-			if (buckets[i].Positions.Count == 0) continue;
+			if (positions[i].Count == 0) continue;
+
+			var geom = new MeshGeometry3D
+			{
+				Positions = positions[i],
+				TriangleIndices = indices[i]
+			};
+
 			float t = i / (float)(Buckets - 1);
 			var color = HeatmapColorMap.Sample(t);
 			var mat = _matCache.Get(color);
-			group.Children.Add(new GeometryModel3D(buckets[i].ToMesh(), mat));
+
+			group.Children.Add(new GeometryModel3D(geom, mat));
 		}
 
 		return group;
 	}
-}
-
-public static class VectorExtensions
-{
-	public static Point3D ToPoint3D(this System.Numerics.Vector3 v)
-		=> new(v.X, v.Y, v.Z);
 }

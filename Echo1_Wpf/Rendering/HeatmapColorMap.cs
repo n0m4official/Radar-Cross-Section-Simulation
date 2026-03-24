@@ -25,12 +25,15 @@ public static class HeatmapColorMap
 		for (int i = 0; i < 256; i++)
 		{
 			float t = i / 255f;
-			// Plasma approximation
-			float r = MathF.Pow(MathF.Clamp(1.9f * t - 0.5f, 0, 1), 0.8f);
-			float g = MathF.Sin(MathF.PI * t) * 0.9f;
-			float b = MathF.Clamp(1.4f - 2.5f * t, 0, 1);
+
+			float r = (float)Math.Pow(Math.Max(0f, Math.Min(1f, 1.9f * t - 0.5f)), 0.8);
+			float g = (float)(Math.Sin(Math.PI * t) * 0.9f);
+			float b = Math.Max(0f, Math.Min(1f, 1.4f - 2.5f * t));
+
 			lut[i] = Color.FromRgb(
-				(byte)(r * 255), (byte)(g * 255), (byte)(b * 255));
+				(byte)(r * 255),
+				(byte)(g * 255),
+				(byte)(b * 255));
 		}
 		return lut;
 	}

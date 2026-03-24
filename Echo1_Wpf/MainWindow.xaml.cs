@@ -1,6 +1,9 @@
-﻿using Echo1.Wpf.Rendering;
+﻿using Echo1.Core.Engine;
+using Echo1.Core.Geometry;
+using Echo1.Core.Import;
+using Echo1.Core.Radar;
+using Echo1.Wpf.Rendering;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace Echo1.Wpf;
@@ -22,7 +25,6 @@ public partial class MainWindow : Window
 		_sweepTimer.Tick += SweepTick;
 		_renderTimer.Tick += RenderTick;
 		_flyCamera = new FreeFlyCamera(Viewport);
-		_flyCamera.Start();
 	}
 
 	private async void LoadModel_Click(object sender, RoutedEventArgs e)

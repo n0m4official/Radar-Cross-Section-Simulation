@@ -1,6 +1,5 @@
 ﻿using Echo1_Core.Geometry;
 using System.Numerics;
-using System.Numerics.Complex; // netstandard complex
 
 namespace Echo1.Core.Engine;
 
