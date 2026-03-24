@@ -3,6 +3,7 @@ using Echo1.Core.Geometry;
 using Echo1.Core.Import;
 using Echo1.Core.Radar;
 using Echo1.Wpf.Rendering;
+using Echo1_Core.Engine;
 using System.Windows;
 using System.Windows.Threading;
 

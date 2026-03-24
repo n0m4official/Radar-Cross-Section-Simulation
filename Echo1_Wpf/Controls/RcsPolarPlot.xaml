@@ -6,7 +6,8 @@
              xmlns:local="clr-namespace:Echo1_Wpf.Controls"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+    <Grid Background="#0D1117">
+        <Canvas x:Name="PlotCanvas" SizeChanged="PlotCanvas_SizeChanged"/>
+        <TextBlock Text="RCS Polar Map (dBsm)" Foreground="Gray" HorizontalAlignment="Center" Margin="5"/>
     </Grid>
 </UserControl>
