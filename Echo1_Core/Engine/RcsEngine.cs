@@ -46,11 +46,28 @@ public sealed class RcsEngine
 				for (int i = range.Item1; i < range.Item2; i++)
 				{
 					var facet = mesh.Facets[i];
-					var contrib = PhysicalOpticsKernel.FacetContribution(facet, kHat, k);
-					facet.RcsContribution = (float)contrib.Magnitude;
-					facet.RcsDb = PhysicalOpticsKernel.ToDbsm(contrib.Magnitude);
-					localSum += contrib;
+
+					// Physical Optics contribution
+					var po = PhysicalOpticsKernel.FacetContribution(facet, kHat, k);
+					facet.RcsContribution = (float)po.Magnitude;
+					facet.RcsDb = PhysicalOpticsKernel.ToDbsm(po.Magnitude);
+
+					localSum += po;
 				}
+
+				// Now do edge diffraction
+				foreach (var edge in mesh.Edges)
+				{
+					var diff = EdgeDiffractionKernel.DiffractEdge(
+						edge.A, edge.B,
+						kHat,
+						-kHat, // monostatic receiver direction
+						edge.WedgeAngle,
+						k);
+
+					localSum += diff;
+				}
+
 				return localSum;
 			},
 			localSum => { lock (localSums) localSums[0] += localSum; }

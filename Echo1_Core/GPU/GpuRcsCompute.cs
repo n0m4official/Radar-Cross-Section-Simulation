@@ -1,48 +1,12 @@
-﻿// NuGet: ComputeSharp
-using ComputeSharp;
+﻿using ComputeSharp;
+using System;
+using System.Numerics;
 using Echo1.Core.Radar;
-using System.Runtime.InteropServices;
+using Echo1.Core.Gpu;
 
-namespace Echo1.Core.Gpu;
 
-/// <summary>GPU shader for parallel facet RCS contributions.</summary>
-[ThreadGroupSize(DefaultThreadGroupSizes.X)]
-[GeneratedComputeShaderDescriptor]
-public partial struct RcsShader : IComputeShader
-{
-	public ReadOnlyBuffer<FacetGpuData> Facets;
-	public ReadWriteBuffer<float> Results;
-	public float4 KHat;   // incident direction xyz, w=wavenumber
+namespace Echo1_Core.Gpu;
 
-	public void Execute()
-	{
-		int i = ThreadIds.X;
-		var f = Facets[i];
-		float dot = f.Nx * KHat.X + f.Ny * KHat.Y + f.Nz * KHat.Z;
-
-		if (dot <= 0f)
-		{
-			Results[i] = 0f;
-			return;
-		}
-
-		float phase = 2f * KHat.W * (f.Cx * KHat.X + f.Cy * KHat.Y + f.Cz * KHat.Z);
-		float amp = 4f * 3.14159265f * f.Area * dot;
-		// Return amplitude squared for incoherent sum (fast) or phase for coherent
-		Results[i] = amp; // Extend for full complex sum
-	}
-}
-
-[StructLayout(LayoutKind.Sequential)]
-public struct FacetGpuData
-{
-	public float Nx, Ny, Nz;       // normal
-	public float Cx, Cy, Cz;       // centroid
-	public float Area;
-	public float _pad;
-}
-
-/// <summary>GPU compute entry point.</summary>
 public sealed class GpuRcsCompute : IDisposable
 {
 	private readonly GraphicsDevice _device;
@@ -50,18 +14,37 @@ public sealed class GpuRcsCompute : IDisposable
 	public GpuRcsCompute()
 		=> _device = GraphicsDevice.GetDefault();
 
-	public float[] ComputeFacetContributions(FacetGpuData[] facets, RadarConfig radar)
+	public Complex ComputeFacetContributions(FacetGpuData[] facets, RadarConfig radar)
 	{
 		using var facetBuf = _device.AllocateReadOnlyBuffer(facets);
-		using var resultBuf = _device.AllocateReadWriteBuffer<float>(facets.Length);
+		using var realBuf = _device.AllocateReadWriteBuffer<float>(facets.Length);
+		using var imagBuf = _device.AllocateReadWriteBuffer<float>(facets.Length);
 
-		var dir = radar.IncidentDirection;
-		var kHat = new float4(dir.X, dir.Y, dir.Z, (float)radar.WaveNumber);
-		var shader = new RcsShader { Facets = facetBuf, Results = resultBuf, KHat = kHat };
+		var d = radar.IncidentDirection;
+		var kHat = new float4(d.X, d.Y, d.Z, (float)radar.WaveNumber);
 
-		_device.For(facets.Length, in shader);
-		return resultBuf.ToArray();
+		var shader = new RcsShader
+		{
+			Facets = facetBuf,
+			Real = realBuf,
+			Imag = imagBuf,
+			KHat = kHat
+		};
+
+		_device.For(facets.Length, shader);
+
+		float[] re = realBuf.ToArray();
+		float[] im = imagBuf.ToArray();
+
+		double sumR = 0, sumI = 0;
+		for (int i = 0; i < re.Length; i++)
+		{
+			sumR += re[i];
+			sumI += im[i];
+		}
+
+		return new Complex(sumR, sumI);
 	}
 
-	public void Dispose() => _device.Dispose();
+	public void Dispose() => _device?.Dispose();
 }

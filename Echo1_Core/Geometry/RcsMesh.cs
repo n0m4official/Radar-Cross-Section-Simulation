@@ -1,4 +1,6 @@
 ﻿using Echo1_Core.Geometry;
+using Echo1_Core.Engine;
+using System.Numerics;
 using System.Collections.Concurrent;
 
 namespace Echo1.Core.Geometry;
@@ -9,6 +11,9 @@ public sealed class RcsMesh
 	public Facet[] Facets { get; }
 	public BoundingBox Bounds { get; }
 
+	public record struct Edge(int Index, Vector3 A, Vector3 B, float WedgeAngle);
+	public Edge[] Edges { get; private set; }
+
 	// LOD levels — pre-decimated at load time
 	public RcsMesh[] LodLevels { get; private set; } = Array.Empty<RcsMesh>();
 
@@ -17,6 +22,7 @@ public sealed class RcsMesh
 		Name = name;
 		Facets = facets;
 		Bounds = BoundingBox.FromFacets(facets);
+		Edges = new Edge[Facets.Length];
 	}
 
 	/// <summary>Select LOD level based on pixel-coverage heuristic.</summary>
