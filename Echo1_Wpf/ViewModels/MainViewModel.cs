@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿// Echo1_RcsSimulator\Echo1_Wpf\ViewModels\MainViewModel.cs
+using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
 namespace Echo1.Wpf.ViewModels;

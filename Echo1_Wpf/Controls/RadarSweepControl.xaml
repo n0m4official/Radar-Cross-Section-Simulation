@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="Echo1.Wpf.Controls.RadarSweepControl"
+﻿<!--Echo1_RcsSimulator\Echo1_Wpf\Controls\RadarSweepControl.xaml-->
+<UserControl x:Class="Echo1.Wpf.Controls.RadarSweepControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid/>

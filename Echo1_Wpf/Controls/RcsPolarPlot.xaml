@@ -1,4 +1,5 @@
-﻿<UserControl x:Class="Echo1.Wpf.Controls.RcsPolarPlot"
+﻿<!--Echo1_RcsSimulator\Echo1_Wpf\Controls\RcsPolarPlot.xaml-->
+<UserControl x:Class="Echo1.Wpf.Controls.RcsPolarPlot"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid/>

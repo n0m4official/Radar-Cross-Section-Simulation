@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿// Echo1_RcsSimulator\Echo1_Wpf\Rendering\FacetMaterialCache.cs
+using System.Windows.Media;
 using System.Windows.Media.Media3D;
 
 namespace Echo1.Wpf.Rendering;

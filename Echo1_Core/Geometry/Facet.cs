@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿// Echo1_RcsSimulator\Echo1_Core\Geometry\Facet.cs
+using System.Numerics;
 
 namespace Echo1.Core.Geometry;
 

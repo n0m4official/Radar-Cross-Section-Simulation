@@ -1,4 +1,5 @@
-﻿<Application x:Class="Echo1.Wpf.App"
+﻿<!--Echo1_RcsSimulator\Echo1_Wpf\App.xaml-->
+<Application x:Class="Echo1.Wpf.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">

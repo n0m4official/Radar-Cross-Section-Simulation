@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿// Echo1_RcsSimulator\Echo1_Core\Gpu\FacetGpuData.cs
+using System.Runtime.InteropServices;
 
 namespace Echo1.Core.Gpu;
 

@@ -1,4 +1,5 @@
-﻿using System.Windows.Media;
+﻿// Echo1_RcsSimulator\Echo1_Wpf\Rendering\HeatmapColorMap.cs
+using System.Windows.Media;
 
 namespace Echo1.Wpf.Rendering;
 

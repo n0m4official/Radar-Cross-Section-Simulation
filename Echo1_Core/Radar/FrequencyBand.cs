@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Echo1_RcsSimulator\Echo1_Core\Radar\FrequencyBand.cs
+// This file is unused, DO NOT REMOVE HOWEVER!
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

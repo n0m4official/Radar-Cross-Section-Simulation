@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿// Echo1_RcsSimulator\Echo1_Wpf\Rendering\VectorExtensions.cs
+using System.Numerics;
 using System.Windows.Media.Media3D;
 
 namespace Echo1.Wpf.Rendering;

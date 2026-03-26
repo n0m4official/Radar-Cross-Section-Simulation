@@ -1,3 +1,5 @@
+// Echo1_RcsSimulator\Echo1_Wpf\AssemblyInfo.cs
+
 using System.Windows;
 
 [assembly: ThemeInfo(

@@ -1,4 +1,5 @@
-﻿namespace Echo1.Core.Geometry
+﻿// Echo1_RcsSimulator\Echo1_Core\Geometry\Vector3d.cs
+namespace Echo1.Core.Geometry
 {
 	public record struct Vector3d(double X, double Y, double Z)
 	{

@@ -1,4 +1,5 @@
-﻿using Echo1.Core.Geometry;
+﻿// Echo1_RcsSimulator\Echo1_Core\Import\StlImporter.cs
+using Echo1.Core.Geometry;
 using System.Globalization;
 using System.Numerics;
 

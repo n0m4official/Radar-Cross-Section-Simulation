@@ -1,4 +1,5 @@
-﻿namespace Echo1.Core.Radar;
+﻿// Echo1_RcsSimulator\Echo1_Core\Radar\RadarConfig.cs
+namespace Echo1.Core.Radar;
 
 public sealed class RadarConfig
 {

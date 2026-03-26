@@ -1,4 +1,5 @@
-﻿using Echo1.Core.Geometry;
+﻿// Echo1_RcsSimulator\Echo1_Core\Engine\PhysicalOpticsKernel.cs
+using Echo1.Core.Geometry;
 using System.Numerics;
 using Complex = System.Numerics.Complex;
 

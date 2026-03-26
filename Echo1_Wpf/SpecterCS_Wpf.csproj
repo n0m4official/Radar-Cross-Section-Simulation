@@ -13,6 +13,6 @@
 		<PackageReference Include="HelixToolkit.Wpf" Version="2.25.0" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Echo1_Core\Echo1_Core.csproj" />
+		<ProjectReference Include="..\Echo1_Core\SpecterCS_Core.csproj" />
 	</ItemGroup>
 </Project>

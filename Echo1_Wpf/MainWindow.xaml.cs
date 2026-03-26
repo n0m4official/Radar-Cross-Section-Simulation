@@ -1,4 +1,5 @@
-﻿using Echo1.Core.Engine;
+﻿// Echo1_RcsSimulator\Echo1_Wpf\MainWindow.xaml.cs
+using Echo1.Core.Engine;
 using Echo1.Core.Geometry;
 using Echo1.Core.Import;
 using Echo1.Core.Radar;
