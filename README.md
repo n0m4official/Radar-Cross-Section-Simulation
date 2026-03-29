@@ -4,7 +4,7 @@
 
 ---
 
-## 🛰️ Overview
+## Overview
 
 **SpecterCS** is a real-time radar cross-section (RCS) simulation platform built in C#. It models electromagnetic scattering using **Physical Optics (PO)** and **edge diffraction (PTD-inspired)** techniques, with support for **parallel CPU computation** and **GPU acceleration**.
 
@@ -12,7 +12,17 @@ The system provides interactive 3D visualization, enabling analysis of radar sig
 
 ---
 
-## ⚙️ Core Features
+## Screenshot
+
+<p align="center">
+  <img src="Screenshot 2026-03-29 132405.png" width="520" alt="Active software running using a model of an E-2D Hawkeye">
+  <br>
+  <em>Active software running using a model of an E-2D Hawkeye</em>
+</p>
+
+---
+
+## Core Features
 
 * **Real-Time RCS Computation**
 
@@ -49,7 +59,7 @@ The system provides interactive 3D visualization, enabling analysis of radar sig
 
 ---
 
-## 🧱 Architecture
+## Architecture
 
 SpecterCS is structured as a modular system:
 
@@ -69,7 +79,7 @@ SpecterCS.Wpf
 
 ---
 
-## 🧮 Simulation Model
+## Simulation Model
 
 ### Physical Optics (PO)
 
@@ -90,7 +100,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Requirements
 
@@ -122,7 +132,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 🎮 Controls
+## Controls
 
 | Control                    | Function          |
 | -------------------------- | ----------------- |
@@ -133,7 +143,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 📊 Output
+## Output
 
 * **RCS (dBsm)** — logarithmic radar signature
 * **RCS (m²)** — linear radar cross-section
@@ -141,7 +151,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 🧪 Current Limitations
+## Current Limitations
 
 * Simplified diffraction model (PTD approximation)
 * No material properties (perfect conductor assumption)
@@ -150,7 +160,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 🛣️ Roadmap
+## Roadmap
 
 * [ ] Advanced diffraction models (full PTD / UTD)
 * [ ] Material and dielectric modeling
@@ -162,7 +172,7 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ---
 
-## 🧠 Design Philosophy
+## Design Philosophy
 
 SpecterCS is built around three principles:
 
@@ -172,19 +182,19 @@ SpecterCS is built around three principles:
 
 ---
 
-## 📌 Status
+## Status
 
 Active development — evolving toward a professional-grade simulation platform.
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This project is intended for **educational, research, and visualization purposes only**. It is not a validated engineering tool and should not be used for real-world defense or safety-critical applications.
 
 ---
 
-## 👤 Author
+## Author
 
 Developed by **Mathew Dixon**
 
