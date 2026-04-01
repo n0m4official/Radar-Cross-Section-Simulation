@@ -1,4 +1,5 @@
-﻿using Echo1.Core.Radar;
+// Echo1_RcsSimulator\Echo1_Core\Engine\RcsCache.cs
+using Echo1.Core.Radar;
 using System.Runtime.Caching;
 
 namespace Echo1.Core.Engine;
