@@ -15,9 +15,9 @@ The system provides interactive 3D visualization, enabling analysis of radar sig
 ## Screenshot
 
 <p align="center">
-  <img src="Screenshot 2026-04-01 115417.png" width="520" alt="Active software running using a model of an E-2D Hawkeye">
+  <img src="Screenshot 2026-04-01 140506.png" width="520" alt="Active software running using a model of an Airbus A320 NEO">
   <br>
-  <em>Active software running using a model of an E-2D Hawkeye</em>
+  <em>Active software running using a model of an Airbus A320 NEO </br> Model: https://www.printables.com/model/552457-airbus-a320-neo/files</em>
 </p>
 
 ---
