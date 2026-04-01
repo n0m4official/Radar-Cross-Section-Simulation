@@ -1,4 +1,5 @@
-﻿using Echo1.Core.Radar;
+// Echo1_RcsSimulator\Echo1_Core\Engine\MaterialProperties.cs
+using Echo1.Core.Radar;
 using System.Numerics;
 using Complex = System.Numerics.Complex;
 
