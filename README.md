@@ -15,7 +15,7 @@ The system provides interactive 3D visualization, enabling analysis of radar sig
 ## Screenshot
 
 <p align="center">
-  <img src="Screenshot 2026-03-29 132405.png" width="520" alt="Active software running using a model of an E-2D Hawkeye">
+  <img src="Screenshot 2026-04-01 115417.png" width="520" alt="Active software running using a model of an E-2D Hawkeye">
   <br>
   <em>Active software running using a model of an E-2D Hawkeye</em>
 </p>
