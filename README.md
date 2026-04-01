@@ -153,8 +153,6 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ## Current Limitations
 
-* Simplified diffraction model (PTD approximation)
-* No material properties (perfect conductor assumption)
 * No polarization-specific modeling (planned)
 * Limited validation against real-world datasets
 
@@ -162,9 +160,9 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ## Roadmap
 
-* [ ] Advanced diffraction models (full PTD / UTD)
-* [ ] Material and dielectric modeling
-* [ ] Polarization handling (HH, VV, HV, VH)
+* [X] Advanced diffraction models (full PTD / UTD)
+* [X] Material and dielectric modeling
+* [X] Polarization handling (HH, VV, HV, VH)
 * [ ] Polar RCS plots
 * [ ] Time-domain simulation
 * [ ] Cloud / distributed computation
