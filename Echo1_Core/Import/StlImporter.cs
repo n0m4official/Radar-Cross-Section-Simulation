@@ -14,6 +14,16 @@ public static class StlImporter
 		return IsBinaryStl(bytes) ? LoadBinary(path, bytes) : LoadAscii(path);
 	}
 
+	static Vector3 RotateAboutZ(Vector3 v)
+	{
+		// -90 degrees about Z
+		return new Vector3(
+			v.Y,
+			-v.X,
+			v.Z
+		);
+	}
+
 	private static bool IsBinaryStl(byte[] data)
 	{
 		// ASCII STL starts with "solid"; binary has 80-byte header then uint32 count
@@ -33,9 +43,9 @@ public static class StlImporter
 		{
 			// Skip normal (12 bytes) — we recompute from vertices
 			offset += 12;
-			var v0 = ReadVec3(data, ref offset);
-			var v1 = ReadVec3(data, ref offset);
-			var v2 = ReadVec3(data, ref offset);
+			var v0 = RotateAboutZ(ReadVec3(data, ref offset));
+			var v1 = RotateAboutZ(ReadVec3(data, ref offset));
+			var v2 = RotateAboutZ(ReadVec3(data, ref offset));
 			offset += 2; // attribute byte count
 			facets[i] = new Facet(i, v0, v1, v2);
 		}

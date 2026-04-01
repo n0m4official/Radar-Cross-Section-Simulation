@@ -72,7 +72,7 @@ public static class PhysicalOpticsKernel
 
 		// PO amplitude: S = (j * k² / 2π) · A · cosθ · Γ · I
 		// Combined into single complex expression:
-		double amplitude = (k * k) / (2.0 * Math.PI) * facet.Area * cosTheta;
+		double amplitude = (1.0) / (2.0 * Math.PI) * facet.Area * cosTheta;
 		var jk = new Complex(0.0, amplitude);   // j factor from surface current to radiation
 
 		return jk * gamma * I;

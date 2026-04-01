@@ -115,6 +115,7 @@ public partial class MainWindow : Window
 		{
 			BtnLoad.IsEnabled = true;
 			BtnLoad.Content = "Load OBJ / STL…";
+			Console.WriteLine(_mesh.Bounds.DiagonalMetres);
 		}
 	}
 

@@ -24,9 +24,9 @@ public sealed class RadarConfig
 		float azR = MathF.PI * az / 180f;
 		float elR = MathF.PI * el / 180f;
 		return new(
-			MathF.Cos(elR) * MathF.Sin(azR),
+			MathF.Cos(elR) * MathF.Cos(azR),
 			MathF.Sin(elR),
-			MathF.Cos(elR) * MathF.Cos(azR)
+			MathF.Cos(elR) * MathF.Sin(azR)
 		);
 	}
 }

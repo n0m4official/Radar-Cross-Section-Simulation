@@ -75,9 +75,15 @@ public sealed partial class RcsEngine
 					var contribution = PhysicalOpticsKernel.FacetContribution(
 						facet, kHat, k, material, pol);
 
+					if (double.IsNaN(contribution.Real) || double.IsNaN(contribution.Imaginary))
+					{
+						// Log the facet/edge index here to find the "bad" part of the E-2D model!
+						contribution = Complex.Zero;
+					}
+
 					// Store incoherent magnitude for heatmap colouring
 					// Using contribution magnitude squared (proportional to per-facet σ)
-					double facetRcs = 4.0 * Math.PI * contribution.Magnitude * contribution.Magnitude;
+					double facetRcs = contribution.Magnitude;
 					facet.RcsContribution = (float)facetRcs;
 					facet.RcsDb = PhysicalOpticsKernel.ToDbsm(facetRcs);
 
@@ -98,28 +104,34 @@ public sealed partial class RcsEngine
 		// ── 2. Edge Diffraction: single-threaded, computed ONCE ────────────────────
 		// Not parallelised here because edge count is typically 1-2 orders of magnitude
 		// smaller than facet count. Parallelise if edge count > ~100k.
-		var edgeSum = Complex.Zero;
+		double edgeRcsM2 = 0.0;
+
 		foreach (var edge in mesh.Edges)
 		{
-			edgeSum += EdgeDiffractionKernel.DiffractEdge(
+			var e = EdgeDiffractionKernel.DiffractEdge(
 				edge.A, edge.B,
 				kHat,
 				edge.WedgeAngle,
 				k,
 				edge.Normal1,
 				edge.Normal2);
+
+			// incoherent power sum
+			double mag2 = e.Real * e.Real + e.Imaginary * e.Imaginary;
+			edgeRcsM2 += 4.0 * Math.PI * mag2;
 		}
 
 		// ── 3. Coherent total ─────────────────────────────────────────────────────
-		var total = poSum + edgeSum;
-		double totalM2 = PhysicalOpticsKernel.TotalRcsM2(total);
+
+		double poRcsM2 = PhysicalOpticsKernel.TotalRcsM2(poSum);
+		double totalM2 = poRcsM2 + edgeRcsM2;
 		float totalDb = PhysicalOpticsKernel.ToDbsm(totalM2);
 
 		var result = new RcsResult(
 			TotalM2: totalM2,
 			TotalDbsm: totalDb,
-			PoM2: PhysicalOpticsKernel.TotalRcsM2(poSum),
-			EdgeM2: PhysicalOpticsKernel.TotalRcsM2(edgeSum),
+			PoM2: poRcsM2,
+			EdgeM2: edgeRcsM2,
 			Radar: radar);
 
 		_cache.Store(cacheKey, result);

@@ -10,7 +10,7 @@ namespace Echo1.Core.Engine;
 ///
 /// Implements the Keller-Mitzner-Ufimtsev formulation with Kouyoumjian-Pathak
 /// uniform transition function F(x) to remove the singularities at shadow and
-/// reflection boundaries (Kouyoumjian &amp; Pathak, 1974, Proc. IEEE).
+/// reflection boundaries (Kouyoumjian & Pathak, 1974, Proc. IEEE).
 ///
 /// For a straight wedge edge with:
 ///   - Interior wedge angle α (the solid angle of the wedge material)
@@ -27,10 +27,10 @@ namespace Echo1.Core.Engine;
 ///   F(x) = 2j√x · e^(jx) · ∫_x^∞ e^(-jt²) dt   [Fresnel integral]
 ///
 /// References:
-///   Kouyoumjian &amp; Pathak (1974) "A uniform geometrical theory of diffraction
+///   Kouyoumjian & Pathak (1974) "A uniform geometrical theory of diffraction
 ///     for an edge in a perfectly conducting surface." Proc. IEEE, 62(11).
 ///   Ufimtsev (2007) "Fundamentals of the Physical Theory of Diffraction." Wiley.
-///   Knott, Shaeffer &amp; Tuley (2004) "Radar Cross Section." SciTech, ch. 6.
+///   Knott, Shaeffer & Tuley (2004) "Radar Cross Section." SciTech, ch. 6.
 /// </summary>
 public static class EdgeDiffractionKernel
 {
@@ -55,91 +55,101 @@ public static class EdgeDiffractionKernel
 		Vec3 faceNormal1,
 		Vec3 faceNormal2)
 	{
+
+		if (Vector3.Dot(faceNormal1, incidentDir) <= 0f &&
+			Vector3.Dot(faceNormal2, incidentDir) <= 0f)
+		{
+			return Complex.Zero;
+		}
+
 		Vec3 edgeVec = b - a;
 		float edgeLen = edgeVec.Length();
-		if (edgeLen < 1e-9f) return Complex.Zero;
 
-		Vec3 t = Vec3.Normalize(edgeVec);  // edge tangent (unit)
+		// 1. Sanitize Normals (The most likely Hawkeye failure point)
+		if (float.IsNaN(faceNormal1.X) || float.IsNaN(faceNormal2.X) ||
+			faceNormal1.LengthSquared() < 1e-6f || faceNormal2.LengthSquared() < 1e-6f)
+		{
+			return Complex.Zero;
+		}
+
+		// 2. Sanitize the wedge angle and edge
+		if (float.IsNaN(wedgeAngle) || edgeLen < 1e-9f) return Complex.Zero;
+
+		// Normalize incident direction safely
+		if (incidentDir.LengthSquared() < 1e-12f) return Complex.Zero;
+		incidentDir = Vec3.Normalize(incidentDir);
+
+		// Edge tangent
+		Vec3 t = edgeVec.LengthSquared() < 1e-12f ? Vec3.UnitX : Vec3.Normalize(edgeVec);
 
 		// β₀: angle between incident direction and edge tangent
-		// For monostatic, scattering direction = -incidentDir
-		float sinBeta0Sq = 1.0f - MathF.Pow(Vec3.Dot(incidentDir, t), 2);
-		if (sinBeta0Sq < 1e-8f) return Complex.Zero;  // edge-on incidence — skip
+		float dot = Math.Clamp(Vec3.Dot(incidentDir, t), -1.0f, 1.0f);
+		float sinBeta0Sq = 1.0f - dot * dot;
+		if (sinBeta0Sq < 1e-12f) return Complex.Zero;
 		double sinBeta0 = Math.Sqrt(sinBeta0Sq);
 
-		// Build local edge coordinate frame:
-		// - t̂: edge tangent
-		// - n̂: bisector of the wedge faces (pointing into the exterior region)
-		// - b̂ = t̂ × n̂
-		Vec3 wedgeBisector = Vec3.Normalize(faceNormal1 + faceNormal2);
-		Vec3 bHat = Vec3.Normalize(Vec3.Cross(t, wedgeBisector));
+		// Edge coordinate frame
+		Vec3 bisector = faceNormal1 + faceNormal2;
+		if (bisector.LengthSquared() < 1e-12f) return Complex.Zero;
+		Vec3 wedgeBisector = Vec3.Normalize(bisector);
 
-		// Project incident direction into edge-normal plane (perpendicular to t̂)
+		Vec3 bHat = Vec3.Cross(t, wedgeBisector);
+		if (bHat.LengthSquared() < 1e-12f) return Complex.Zero;
+		bHat = Vec3.Normalize(bHat);
+
+		// Project incident direction into edge-normal plane
 		Vec3 incProj = incidentDir - Vec3.Dot(incidentDir, t) * t;
-		float incProjLen = incProj.Length();
-		if (incProjLen < 1e-9f) return Complex.Zero;
+		if (incProj.LengthSquared() < 1e-12f) return Complex.Zero;
 		incProj = Vec3.Normalize(incProj);
 
-		// φ': azimuth angle of incidence (from face 1 normal, measured in edge normal plane)
-		// φ : azimuth angle of scattering = 2π - φ' for monostatic (backscatter)
+		// Azimuth angles
 		double phiInc = Math.Atan2(Vec3.Dot(incProj, bHat), Vec3.Dot(incProj, wedgeBisector));
-		// Ensure [0, 2π]
 		if (phiInc < 0) phiInc += 2.0 * Math.PI;
-
-		// Monostatic: scatter back toward radar, so φ_s = 2π - φ_inc in the wedge plane
 		double phiSca = 2.0 * Math.PI - phiInc;
 
-		// Wedge parameter n = (2π - α) / π where α = interior angle
-		// n = 2: half-plane diffractor
-		// n = 1: flat surface (no diffraction at smooth surface)
-		double alpha = wedgeAngle;  // interior solid angle of the wedge material
-		double n = (2.0 * Math.PI - alpha) / Math.PI;
-		n = Math.Clamp(n, 1.0, 2.0);
+		// Wedge parameter n
+		double alpha = wedgeAngle;
+		double n = Math.Clamp((2.0 * Math.PI - alpha) / Math.PI, 1.0, 2.0);
 
-		// Effective path length L for Fresnel parameter
-		// For monostatic far-field: L = distance from edge to radar is effectively ∞,
-		// but we use the edge length as the integration variable.
-		// L = sin²β₀ (normalised to edge length, factor applied below)
+		// Fresnel path parameter
 		double L = sinBeta0Sq;
 
-		// Compute UTD diffraction coefficients (soft and hard)
-		double phi_minus = phiSca - phiInc;  // (φ - φ')
-		double phi_plus = phiSca + phiInc;  // (φ + φ')
+		if (sinBeta0Sq < 1e-2)   // ~β₀ < 6 degrees
+		{
+			return Complex.Zero;
+		}
 
-		Complex Ds = UtdDiffractionCoeff(phi_minus, phi_plus, n, k, L, sinBeta0, soft: true);
-		Complex Dh = UtdDiffractionCoeff(phi_minus, phi_plus, n, k, L, sinBeta0, soft: false);
+		// UTD diffraction coefficients
+		double phi_minus = phiSca - phiInc;
+		double phi_plus = phiSca + phiInc;
 
-		// For monostatic VV: use average of soft and hard (E-plane average)
-		// A full polarimetric implementation would separate these by pol vector projection.
+		Complex Ds = UtdDiffractionCoeff(phi_minus, phi_plus, n, k, L, sinBeta0, true);
+		Complex Dh = UtdDiffractionCoeff(phi_minus, phi_plus, n, k, L, sinBeta0, false);
+
+		// Monostatic VV: average
 		Complex D = (Ds + Dh) * 0.5;
 
-		// Radiation integral along edge (coherent sum):
-		// I_edge = ∫_0^L e^(j2k k̂·r) ds evaluated at centroid (mid-edge approximation)
-		// For a short edge relative to λ, the centroid-phase approximation is valid.
+		// Radiation integral along edge (mid-edge approximation)
 		Vec3 edgeMid = (a + b) * 0.5f;
 		double midPhase = 2.0 * k * (incidentDir.X * edgeMid.X
 								   + incidentDir.Y * edgeMid.Y
 								   + incidentDir.Z * edgeMid.Z);
 		var phasePhasor = new Complex(Math.Cos(midPhase), Math.Sin(midPhase));
 
-		// Total edge contribution: D · L_edge · e^(jφ_mid)
-		return D * edgeLen * phasePhasor;
+		return D * phasePhasor / Math.Sqrt(4.0 * Math.PI);
 	}
 
-	/// <summary>
-	/// UTD diffraction coefficient with Kouyoumjian-Pathak uniform Fresnel correction.
-	/// </summary>
 	private static Complex UtdDiffractionCoeff(
 		double phi_minus, double phi_plus, double n,
 		double k, double L, double sinBeta0, bool soft)
 	{
-		// Pre-factor: e^(-jπ/4) / (2n·√(2πk·sinBeta0))
-		double prefactorMag = 1.0 / (2.0 * n * Math.Sqrt(2.0 * Math.PI * k) * sinBeta0);
+		// Pre-factor
+		double safeSinBeta = Math.Max(sinBeta0, 1e-12);
+		double prefactorMag = 1.0 / (2.0 * n * Math.Sqrt(2.0 * Math.PI * k) * safeSinBeta);
 		var prefactor = new Complex(
 			prefactorMag * Math.Cos(-Math.PI / 4.0),
 			prefactorMag * Math.Sin(-Math.PI / 4.0));
 
-		// Four angular terms (two sign combinations × two polarisations):
 		Complex f1 = CotangentTerm(phi_minus, n, +1.0, k, L);
 		Complex f2 = CotangentTerm(phi_minus, n, -1.0, k, L);
 		Complex f3 = CotangentTerm(phi_plus, n, +1.0, k, L);
@@ -151,60 +161,41 @@ public static class EdgeDiffractionKernel
 		return soft ? D_soft : D_hard;
 	}
 
-	/// <summary>
-	/// Cotangent factor with Kouyoumjian-Pathak uniform Fresnel transition function F(x).
-	/// F(x) prevents divergence at shadow and reflection boundaries.
-	/// cot( (π ± φ) / 2n ) · F(kL · a±(φ))
-	/// </summary>
 	private static Complex CotangentTerm(double phi, double n, double sign, double k, double L)
 	{
 		double arg = (Math.PI + sign * phi) / (2.0 * n);
-		double cotVal = CosSafe(arg) / SinSafe(arg);  // cot(arg), protected against ÷0
+		double cotVal = CosSafe(arg) / SinSafe(arg);
 
 		double aPhi = 2.0 * Math.Pow(Math.Cos(phi / 2.0 - Math.PI * NearestInt(phi / (2.0 * Math.PI * n))), 2);
-		double x = k * L * aPhi;
+		double x = k * L * Math.Max(aPhi, 1e-12); // prevent zero
 
 		Complex F = FresnelTransition(x);
 
 		return new Complex(cotVal, 0.0) * F;
 	}
 
-	/// <summary>
-	/// Kouyoumjian-Pathak uniform Fresnel transition function:
-	///   F(x) = 2j·√x · e^(jx) · ∫_√x^∞ e^(-jt²) dt
-	///
-	/// Computed via series expansion for small x, asymptotic for large x.
-	/// </summary>
 	private static Complex FresnelTransition(double x)
 	{
-		if (x < 0) x = 0;
+		x = Math.Max(x, 0.0);
 
 		if (x < 0.3)
 		{
-			// Small-argument series (Abramowitz &amp; Stegun approximation):
-			// F(x) ≈ √(πx) · e^(j(π/4 + x)) · [1 - j·x/3 + ...]
 			double sqrtX = Math.Sqrt(x);
 			double mag = Math.Sqrt(Math.PI) * sqrtX;
 			double phase = Math.PI / 4.0 + x;
 			var series = new Complex(mag * Math.Cos(phase), mag * Math.Sin(phase));
-			// Correction term:
 			var corr = new Complex(1.0 - x / 3.0, -x * x / 12.0);
 			return series * corr;
 		}
 		else if (x > 30.0)
 		{
-			// Asymptotic expansion: F(x) → 1 - j/(2x) - 3/(4x²) + ...
 			return new Complex(1.0 - 3.0 / (4.0 * x * x),
-							  -1.0 / (2.0 * x) + 15.0 / (8.0 * x * x * x));
+							   -1.0 / (2.0 * x) + 15.0 / (8.0 * x * x * x));
 		}
 		else
 		{
-			// Mid-range: numerical integration of ∫_0^√x e^(-jt²) dt
-			// via 8-point Gauss-Legendre quadrature on [0, √x]
 			double sqrtX = Math.Sqrt(x);
 			var integral = GaussLegendreFresnelIntegral(sqrtX);
-			// F(x) = 2j√x · e^(jx) · (∫_0^∞ - ∫_0^√x)
-			// Known: ∫_0^∞ e^(-jt²) dt = √π/2 · e^(-jπ/4)
 			var inf = new Complex(Math.Sqrt(Math.PI) / 2.0 * Math.Cos(-Math.PI / 4.0),
 								  Math.Sqrt(Math.PI) / 2.0 * Math.Sin(-Math.PI / 4.0));
 			var tailIntegral = inf - integral;
@@ -213,12 +204,8 @@ public static class EdgeDiffractionKernel
 		}
 	}
 
-	/// <summary>
-	/// 16-point Gauss-Legendre quadrature for ∫_0^a e^(-jt²) dt.
-	/// </summary>
 	private static Complex GaussLegendreFresnelIntegral(double a)
 	{
-		// 16-point GL nodes and weights on [-1, 1]
 		ReadOnlySpan<double> nodes = stackalloc double[]
 		{
 			-0.9894009349919, -0.9445750230732, -0.8656312023341, -0.7554044083550,
@@ -245,7 +232,6 @@ public static class EdgeDiffractionKernel
 		return sum * halfA;
 	}
 
-	// Helper: nearest integer (for a±(φ) computation)
 	private static double NearestInt(double x) => Math.Round(x);
 	private static double CosSafe(double x) => Math.Cos(x);
 	private static double SinSafe(double x)
