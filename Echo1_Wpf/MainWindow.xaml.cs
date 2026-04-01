@@ -426,8 +426,15 @@ public partial class MainWindow : Window
 	//  Material assignment
 	// ──────────────────────────────────────────────────────────────────────────
 
+
+	// Actual material application happens in ApplyMaterial_Click; this handler is just a placeholder
 	private void MaterialCombo_Changed(object sender, SelectionChangedEventArgs e) { }
 
+	// Actual materials are classified, so we map the combo box selection to known material properties here
+	// Will not implement custom material editing in this project due to:
+	//		- legality concerns around user-provided material data
+	//		- Complexity of accurate EM material characterisation
+	//		- Actual material properties, compositions, ingredients, and properties are classified information in many jurisdictions
 	private void ApplyMaterial_Click(object sender, RoutedEventArgs e)
 	{
 		if (_mesh is null) return;
