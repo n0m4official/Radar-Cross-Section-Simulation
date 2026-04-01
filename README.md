@@ -24,38 +24,49 @@ The system provides interactive 3D visualization, enabling analysis of radar sig
 
 ## Core Features
 
-* **Real-Time RCS Computation**
+* **High-Fidelity RCS Computation**
 
-  * Physical Optics (facet-based scattering)
-  * Edge diffraction modeling
+  * Physical Optics using analytic triangle integration (Ling–Lee–Chuang)
+  * Edge diffraction using UTD/PTD-inspired models with Fresnel transition functions
+  * Coherent phase-based summation across surfaces and edges
 
-* **High Performance Architecture**
+* **Material & Electromagnetic Modeling**
 
-  * Multi-threaded CPU processing
-  * GPU acceleration via ComputeSharp
+  * Perfect Electric Conductor (PEC) surfaces
+  * Dielectric and Radar Absorbing Material (RAM) coatings
+  * Fresnel-based reflection with complex permittivity/permeability
+
+* **Hybrid Compute Architecture**
+
+  * Multi-threaded CPU engine for accurate physics computation
+  * GPU acceleration (ComputeSharp) for real-time visualization
+  * Coherent CPU results + approximate GPU heatmap rendering
 
 * **3D Visualization**
 
-  * Interactive viewport (HelixToolkit)
-  * Heatmap rendering of RCS distribution (dBsm)
+  * Interactive 3D viewport (HelixToolkit)
+  * Per-facet RCS heatmap (dBsm)
+  * Real-time parameter updates
 
-* **Geometry Pipeline**
+* **Geometry Processing Pipeline**
 
-  * OBJ and STL import support
+  * OBJ and STL import
   * Automatic triangulation
-  * Edge extraction for diffraction modeling
-  * Mesh decimation (LOD system)
+  * Edge extraction with dihedral angle computation
+  * Level-of-detail (LOD) mesh decimation
 
 * **Radar Simulation**
 
-  * Adjustable frequency (GHz range)
-  * Configurable azimuth & elevation
-  * Real-time sweep mode
+  * Configurable frequency (GHz range)
+  * Full azimuth/elevation control
+  * Polarization support (HH, VV, HV, VH)
+  * Real-time sweep computation
 
-* **Caching System**
+* **Caching & Performance Optimization**
 
   * Angular and frequency quantization
-  * Fast recomputation for repeated scans
+  * Polarization-aware caching
+  * Fast recomputation for interactive workflows
 
 ---
 
@@ -83,20 +94,35 @@ SpecterCS.Wpf
 
 ### Physical Optics (PO)
 
-Facet-based scattering is computed using:
+Surface scattering is computed using the **analytic triangle integral** (Ling–Lee–Chuang formulation), derived from the Stratton–Chu equations.
 
-* Surface normals
-* Incident wave direction
-* Phase accumulation
-* Coherent summation
+Key characteristics:
 
-### Edge Diffraction
+* Exact phase integration across triangle vertices
+* Coherent summation of scattered fields
+* Correct amplitude normalization (k² / 2π)
+* Material-dependent Fresnel reflection
 
-A simplified PTD-based model is used to approximate diffraction effects along mesh edges:
+---
 
-* Wedge angle estimation
-* Incident and scatter direction projection
-* Phase-based contribution
+### Edge Diffraction (UTD/PTD)
+
+Edge contributions are modeled using a **Uniform Theory of Diffraction (UTD)** inspired approach:
+
+* Wedge-based diffraction using dihedral angles
+* Kouyoumjian–Pathak transition function for boundary smoothing
+* Fresnel integral evaluation (series, asymptotic, and numerical quadrature)
+* Monostatic coherent edge integration
+
+---
+
+### Material Interaction
+
+Electromagnetic interaction is modeled via:
+
+* Fresnel reflection coefficients (angle + polarization dependent)
+* Complex permittivity and permeability
+* Single-layer RAM coating approximation using impedance methods
 
 ---
 
@@ -153,8 +179,11 @@ A simplified PTD-based model is used to approximate diffraction effects along me
 
 ## Current Limitations
 
-* No polarization-specific modeling (planned)
-* Limited validation against real-world datasets
+* Diffraction model is UTD-inspired and not a full multi-bounce diffraction solution
+* No multiple scattering (single-bounce PO + edge diffraction only)
+* Limited validation against measured RCS datasets
+* GPU path uses centroid-based approximation (CPU path is authoritative)
+* No time-domain or transient simulation
 
 ---
 
@@ -183,6 +212,15 @@ SpecterCS is built around three principles:
 ## Status
 
 Active development — evolving toward a professional-grade simulation platform.
+
+---
+
+## What Makes SpecterCS Different
+
+* Uses **analytic electromagnetic formulations**, not heuristic approximations
+* Separates **visualization (GPU)** from **physics computation (CPU)**
+* Supports **material-aware RCS modeling**, not just geometry-based scattering
+* Designed as a **modular simulation engine**, not a single-purpose tool
 
 ---
 
