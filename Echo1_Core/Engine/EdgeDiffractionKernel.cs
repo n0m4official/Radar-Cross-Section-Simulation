@@ -143,31 +143,47 @@ public static class EdgeDiffractionKernel
 		double phi_minus, double phi_plus, double n,
 		double k, double L, double sinBeta0, bool soft)
 	{
-		// Pre-factor
 		double safeSinBeta = Math.Max(sinBeta0, 1e-12);
+
 		double prefactorMag = 1.0 / (2.0 * n * Math.Sqrt(2.0 * Math.PI * k) * safeSinBeta);
-		var prefactor = new Complex(
-			prefactorMag * Math.Cos(-Math.PI / 4.0),
-			prefactorMag * Math.Sin(-Math.PI / 4.0));
 
-		Complex f1 = CotangentTerm(phi_minus, n, +1.0, k, L);
-		Complex f2 = CotangentTerm(phi_minus, n, -1.0, k, L);
-		Complex f3 = CotangentTerm(phi_plus, n, +1.0, k, L);
-		Complex f4 = CotangentTerm(phi_plus, n, -1.0, k, L);
+		Complex phase = Complex.Exp(new Complex(0, -Math.PI / 4.0));
+		Complex prefactor = prefactorMag * phase;
 
-		Complex D_soft = -prefactor * (f1 + f2 + f3 + f4);
-		Complex D_hard = -prefactor * (f1 + f2 - f3 - f4);
+		// Ufimtsev uses ONLY phi = phi_s - phi_i
+		Complex F1 = CotangentTerm(phi_minus, n, +1.0, k, L);
+		Complex F2 = CotangentTerm(phi_minus, n, -1.0, k, L);
 
-		return soft ? D_soft : D_hard;
+		Complex result;
+
+		if (soft)
+		{
+			result = -(prefactor) * (F1 + F2);
+		}
+		else
+		{
+			// Hard polarization flips sign between terms
+			result = -(prefactor) * (F1 - F2);
+		}
+
+		return result;
 	}
 
 	private static Complex CotangentTerm(double phi, double n, double sign, double k, double L)
 	{
-		double arg = (Math.PI + sign * phi) / (2.0 * n);
-		double cotVal = CosSafe(arg) / SinSafe(arg);
+		// Proper Ufimtsev angular term
+		double angle = (Math.PI + sign * phi) / (2.0 * n);
 
-		double aPhi = 2.0 * Math.Pow(Math.Cos(phi / 2.0 - Math.PI * NearestInt(phi / (2.0 * Math.PI * n))), 2);
-		double x = k * L * Math.Max(aPhi, 1e-12); // prevent zero
+		double cotVal = CosSafe(angle) / SinSafe(angle);
+
+		// Proper Keller cone distance function
+		double m = NearestInt((phi + sign * Math.PI) / (2.0 * Math.PI * n));
+
+		double delta = phi + sign * Math.PI - 2.0 * Math.PI * n * m;
+
+		double a = 2.0 * Math.Pow(Math.Sin(delta / 2.0), 2);
+
+		double x = k * L * Math.Max(a, 1e-12);
 
 		Complex F = FresnelTransition(x);
 
