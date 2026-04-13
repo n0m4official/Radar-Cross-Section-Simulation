@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+// Echo1_RcsSimulator\Echo1_Core\Engine\EdgeDiffractionKernel.cs
+using System.Numerics;
 using Complex = System.Numerics.Complex;
 using Vec3 = System.Numerics.Vector3;
 
