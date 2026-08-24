@@ -150,7 +150,7 @@ Electromagnetic interaction is modeled via:
 
 ## Guide
 
-**Version:** v1.3.0
+**Version:** v1.3.0  
 **Application:** SpecterCS — RCS Simulator
 
 > **Important:** SpecterCS is an educational and research visualization tool. Its results are not validated for engineering, safety-critical, operational, or defence decisions.
