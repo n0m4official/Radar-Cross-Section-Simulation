@@ -2,7 +2,7 @@
 
 ### *RCS Simulation Platform — "Reveal the Invisible."*
 
-**Current Release: v1.2.2** ([full changelog](https://github.com/n0m4official/SpecterRCS/releases))
+**Current Release: v1.3.0** ([full changelog](https://github.com/n0m4official/SpecterRCS/releases))
 
 #### A note on development pace
 
@@ -175,7 +175,6 @@ For reliable results:
 ### What's *not* yet implemented
 
 If you're looking for these, they're planned but not built — don't spend time trying to find them in the UI:
-* Fluid/thermal simulation and EM-thermal-fluid coupling
 * Non-linear, spatially-variant surface impedance boundaries
 * Multi-bounce (SBR) scattering — current engine is single-bounce PO + edge diffraction only
 * Multilayer material coatings (TMM)
@@ -206,7 +205,7 @@ If you're looking for these, they're planned but not built — don't spend time 
 
 **Known open issues (as of v1.2.2):**
 * OBJ files can still return inflated RCS values due to mesh-topology limitations — use STL (see [Model Prep](#model-prep--mesh-requirements))
-* On first load, RCS values may appear impossibly high until the elevation slider is moved once — root cause not yet identified
+* RCS values at certain angles will be impossibly large due to limitations with the engine. Fix is planned for release post v1.3.0.
 
 **Current engine limitations:**
 * Diffraction model is UTD-inspired, not a full multi-bounce diffraction solution
@@ -224,7 +223,8 @@ If you're looking for these, they're planned but not built — don't spend time 
 | [v1.1.0](https://github.com/n0m4official/SpecterCS/releases/tag/V1.1.0) | April 1, 2026 | Not supported | Core Physics and Kernel Corrections, Material and Radar Absorbent Coatings, Engine and UI Improvements |
 | [v1.1.1](https://github.com/n0m4official/SpecterCS/releases/tag/V1.1.1) | April 1, 2026 | Not supported | Emergency physics patch for v1.1.0 |
 | [v1.2.1](https://github.com/n0m4official/SpecterCS/releases/tag/V1.2.1) | May 13, 2026 | Not supported | Added Aluminum and Titanium alloys to materials |
-| [v1.2.2](https://github.com/n0m4official/SpecterCS/releases/tag/V1.2.2) | July 4, 2026 | Latest | Reworked `PhysicalOpticsKernel` |
+| [v1.2.2](https://github.com/n0m4official/SpecterCS/releases/tag/V1.2.2) | July 4, 2026 | Not supported | Reworked `PhysicalOpticsKernel` |
+| [v1.3.0](https://github.com/n0m4official/SpecterCS/releases/tag/V1.3.0) | August 24, 2026 | Latest | Misc Bug fixes and implemented Bi-directional multiphysics coupling (EM–thermal–fluid) |
 
 ---
 
