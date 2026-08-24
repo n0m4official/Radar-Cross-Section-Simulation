@@ -235,12 +235,12 @@ If you're looking for these, they're planned but not built — don't spend time 
 * [x] Material and dielectric modeling
 * [x] Polarization handling (HH, VV, HV, VH)
 * [x] Material presets (PEC, Aluminium, Titanium Alloy)
-* [x] Polar RCS plots (`RcsPolarPlot` control) <!-- confirm this is wired up / feature-complete, not just scaffolded -->
+* [x] Bi-directional multiphysics coupling (EM–thermal–fluid)
 
 **Planned:**
 * [ ] Fix OBJ import inflation and first-load RCS bug
+* [ ] Polar RCS plots (`RcsPolarPlot` control) 
 * [ ] Implement import for STEP files for higher LOD models
-* [ ] Bi-directional multiphysics coupling (EM–thermal–fluid)
 * [ ] Non-linear, spatially-variant surface impedance (Zs) boundaries
 * [ ] Fluidic-embedded substrate homogenization
 * [ ] High-G dynamic loading, deformable mesh
