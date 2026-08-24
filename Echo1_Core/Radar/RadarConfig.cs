@@ -3,6 +3,10 @@ namespace Echo1.Core.Radar;
 
 public sealed class RadarConfig
 {
+
+	// Incident energy flux at the target. Set to zero for ordinary RCS-only work.
+	public double IncidentPowerFluxWm2 { get; set; } = 0.0;
+
 	// Frequency
 	public double FrequencyHz { get; set; } = 10e9;   // X-band default
 	public double WavelengthM => PhysicsConstants.C / FrequencyHz;

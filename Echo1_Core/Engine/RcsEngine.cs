@@ -3,6 +3,7 @@ using Echo1.Core.Geometry;
 using Echo1.Core.Radar;
 using Echo1.Core.Engine;
 using System.Collections.Concurrent;
+using Echo1.Core.Multiphysics;
 using System.Numerics;
 using Complex = System.Numerics.Complex;
 
@@ -44,10 +45,12 @@ public sealed partial class RcsEngine
 	/// Compute monostatic RCS for the given mesh and radar configuration.
 	/// Caches results by (azimuth, elevation, frequency) within 0.5° / 100 MHz resolution.
 	/// </summary>
-	public RcsResult Compute(RcsMesh mesh, RadarConfig radar)
+	public RcsResult Compute(RcsMesh mesh, RadarConfig radar, FacetState? facetState = null)
 	{
 		var cacheKey = CacheKey.From(radar);
-		if (_cache.TryGet(cacheKey, out var cached)) return cached;
+
+		if (facetState is null && _cache.TryGet(cacheKey, out var cached))
+			return cached;
 
 		var kHat = radar.IncidentDirection;
 		double k = radar.WaveNumber;
@@ -73,8 +76,10 @@ public sealed partial class RcsEngine
 					// Per-facet material lookup (falls back to mesh default)
 					var material = mesh.GetMaterial(i);
 
-					var contribution = PhysicalOpticsKernel.FacetContribution(
-						facet, kHat, k, material, pol);
+					double temperatureK = facetState?.TemperatureK[i]?? material.ReferenceTemperatureK;
+
+					var contribution = PhysicalOpticsKernel.FacetContribution(facet,
+						kHat, k, radar.FrequencyHz, material, pol, temperatureK);
 
 					if (double.IsNaN(contribution.Real) || double.IsNaN(contribution.Imaginary))
 					{
@@ -135,7 +140,8 @@ public sealed partial class RcsEngine
 			EdgeM2: edgeRcsM2,
 			Radar: radar);
 
-		_cache.Store(cacheKey, result);
+		if (facetState is null)
+			_cache.Store(cacheKey, result);
 		return result;
 	}
 

@@ -18,7 +18,7 @@ namespace Echo1.Core.Engine;
 /// facet area in the far field reduces to the closed-form expression implemented below.
 /// The bistatic PO amplitude for a single flat facet is:
 ///
-///   F(k̂_i, k̂_s) = (k² / π) · A · cos(θ_i) · sinc(u) · sinc(v)  [general bistatic]
+///   F(k̂_i, k̂_s) = (k / π) · A · cos(θ_i) · sinc(u) · sinc(v)  [general bistatic]
 ///
 /// For monostatic (k̂_s = -k̂_i), the expression simplifies, and for arbitrary facet
 /// shape the exact integral is computed via the analytic formula for a triangle
@@ -42,10 +42,9 @@ public static class PhysicalOpticsKernel
 	/// using the Ling-Lee-Chuang analytic triangle integral.
 	///
 	/// Returns the complex scattering amplitude S such that σ = 4π|S|² (see TotalRcsM2).
-	/// S already carries the k² factor and has units of length (m), so |S|² is in m².
+	/// S carries the k factor and has units of length (m), so |S|² is in m².
 	/// </summary>
-	public static Complex FacetContribution(Facet facet, Vector3 kHat, double k,
-		MaterialProperties material, Polarisation pol = Polarisation.VV)
+	public static Complex FacetContribution( Facet facet, Vector3 kHat, double k, double frequencyHz, MaterialProperties material, Polarisation pol = Polarisation.VV, double temperatureK = 293.15)
 	{
 		// Back-face culling: facet must face the radar
 		double cosTheta = Vector3.Dot(facet.Normal, -kHat);
@@ -55,7 +54,7 @@ public static class PhysicalOpticsKernel
 		// For PEC: Γ = -1 (H-pol), +1 (V-pol). For coated surfaces: use Fresnel.
 		// NOTE: k is now passed through — coating behavior (quarter-wave cancellation etc.)
 		// is fundamentally frequency-dependent and cannot be computed without it.
-		Complex gamma = material.FresnelReflection(cosTheta, pol);
+		Complex gamma = material.FresnelReflection(cosTheta, pol, frequencyHz, temperatureK);
 
 		// Phase of each vertex: φ_i = 2k · (k̂ · r_i)
 		// Factor of 2 is because monostatic: incident + reflected path both traverse k̂·r.
@@ -75,11 +74,17 @@ public static class PhysicalOpticsKernel
 		// weights each edge by its true geometric contribution, not just a phase ratio.
 		Complex I = TrianglePhaseIntegral(facet, kHat, k, cosTheta, E0, E1, E2, phi0, phi1, phi2);
 
-		// PO amplitude: S = (j * k² / 2π) · cosθ · Γ · I
+		// PO amplitude: S = (j * k / 2π) · cosθ · Γ · I
+		//
+		// I has units of m², so the amplitude must contain one power of k to
+		// retain the required metres unit for S.  A previous k² normalization
+		// produced m⁰ amplitudes and made broadside RCS scale as λ⁻⁴, yielding
+		// unrealistically large values at radar frequencies.  With k/(2π), a
+		// broadside PEC plate gives σ = 4πA²/λ² as required.
 		// NOTE: no explicit "facet.Area" factor here — Area is now supplied by I itself
 		// (see TrianglePhaseIntegral), since I is the true area integral, not a normalized
 		// dimensionless phase factor. Multiplying by facet.Area again would double-count it.
-		double amplitude = (k * k) / (2.0 * Math.PI) * cosTheta;
+		double amplitude = k / (2.0 * Math.PI) * cosTheta;
 		var jk = new Complex(0.0, amplitude);   // j factor from surface current to radiation
 
 		return jk * gamma * I;

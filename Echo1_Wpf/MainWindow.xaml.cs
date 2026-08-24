@@ -3,6 +3,7 @@ using Echo1.Core.Geometry;
 using Echo1.Core.Import;
 using Echo1.Core.Radar;
 using Echo1.Wpf.Rendering;
+using Echo1.Core.Multiphysics;
 using HelixToolkit.Wpf;
 using System.Globalization;
 using System.IO;
@@ -22,6 +23,7 @@ public partial class MainWindow : Window
 	// Application state
 	private RcsMesh? _mesh;
 	private readonly RcsEngine _engine = new();
+	private CoupledSimulation? _multiphysics;
 	private RadarConfig _radar = new();
 	private readonly SceneBuilder _builder = new();
 	private FreeFlyCamera? _flyCamera;
@@ -142,6 +144,14 @@ public partial class MainWindow : Window
 			// We also build the edge list for the mesh, which is necessary for accurate RCS calculations
 			_mesh.BuildEdges();
 
+			_multiphysics = new CoupledSimulation(_mesh, _engine, new FlowConditions
+				{
+					AmbientTemperatureK = 293.15,
+					AirTemperatureK = 293.15,
+					VelocityMps = 20.0,
+					CharacteristicLengthM = Math.Max(_mesh.Bounds.DiagonalMetres, 0.1)
+				});
+
 			// Update the UI with information about the loaded mesh, including the number of facets, edges, and the diagonal size of the bounding box
 			MeshInfoLabel.Content = $"{_mesh.Facets.Length:N0} facets · {_mesh.Edges.Length:N0} edges · "
 								  + $"{_mesh.Bounds.DiagonalMetres:F1} m diagonal";
@@ -209,7 +219,7 @@ public partial class MainWindow : Window
 	}
 
 	// This method provides a qualitative description of the RCS based on its value in square meters, which can help users understand the scale of the RCS without needing to interpret the raw numbers
-	private static string FormatRcsNick(double rcsM2) => rcsM2 switch
+	private static string FormatRcsNick(double rcsM2) => rcsM2 switch // These still are returning stupid high numbers, need to review further as to cause
 	{
 		// The thresholds for the RCS categories are defined based on typical values for different types of objects
 		> 1000 => $"~{rcsM2 / 1000:F0} km² class",
@@ -632,6 +642,34 @@ public partial class MainWindow : Window
 		}
 		HeatLegend.Background = new LinearGradientBrush(stops,
 			new System.Windows.Point(0, 0), new System.Windows.Point(1, 0));
+	}
+
+	private async void RunMultiphysicsStep_Click(object sender, RoutedEventArgs e)
+	{
+		if (_multiphysics is null || _mesh is null)
+			return;
+
+		var button = (Button)sender;
+		button.IsEnabled = false;
+
+		try
+		{
+			CoupledStepResult result = await Task.Run(() =>
+				_multiphysics.Advance(_radar));
+
+			RcsDbLabel.Content = $"{result.Rcs.TotalDbsm:F2} dBsm";
+			RcsM2Label.Content = $"{result.Rcs.TotalM2:F4} m²";
+			MaterialStatusLabel.Content =
+				$"Surface: {result.MinimumFacetTemperatureK - 273.15:F1}–" +
+				$"{result.MaximumFacetTemperatureK - 273.15:F1} °C | " +
+				$"Air: {result.AirTemperatureK - 273.15:F1} °C";
+
+			UpdateScene();
+		}
+		finally
+		{
+			button.IsEnabled = true;
+		}
 	}
 
 	private static void AddCanvasText(Canvas canvas, double x, double y,

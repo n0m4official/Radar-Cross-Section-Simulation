@@ -14,13 +14,15 @@ public sealed class RcsMesh
 	/// <summary>
 	/// Edge record now stores both face normals for correct UTD angle computation.
 	/// </summary>
-	public readonly record struct Edge(
-		int Index,
-		Vector3 A,
-		Vector3 B,
-		float WedgeAngle,
-		Vector3 Normal1,   // outward normal of face 1
-		Vector3 Normal2);  // outward normal of face 2
+public readonly record struct Edge(
+    int Index,
+    Vector3 A,
+    Vector3 B,
+    float WedgeAngle,
+    Vector3 Normal1,
+    Vector3 Normal2,
+    int Facet1Index,
+    int Facet2Index);
 
 	public Edge[] Edges { get; private set; }
 
@@ -99,7 +101,8 @@ public sealed class RcsMesh
 	public void BuildEdges()
 	{
 		// Maps canonical vertex-pair key → (A, B, N1) for the first face sharing this edge
-		var edgeMap = new Dictionary<long, (Vector3 A, Vector3 B, Vector3 N1)>();
+		var edgeMap = new Dictionary<long,
+			(Vector3 A, Vector3 B, Vector3 N1, int FacetIndex)>();
 		var result = new List<Edge>();
 
 		for (int fi = 0; fi < Facets.Length; fi++)
@@ -122,16 +125,21 @@ public sealed class RcsMesh
 					float dihedralAngle = MathF.Acos(cosAngle);
 					float wedgeInteriorAngle = MathF.PI - dihedralAngle;
 
-					result.Add(new Edge(result.Count, a, b,
+					result.Add(new Edge(
+						result.Count,
+						a,
+						b,
 						wedgeInteriorAngle,
 						existing.N1,
-						f.Normal));
+						f.Normal,
+						existing.FacetIndex,
+						fi));
 
 					edgeMap.Remove(key);
 				}
 				else
 				{
-					edgeMap[key] = (a, b, f.Normal);
+					edgeMap[key] = (a, b, f.Normal, fi);
 				}
 			}
 		}

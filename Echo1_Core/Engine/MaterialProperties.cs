@@ -1,5 +1,6 @@
 // Echo1_RcsSimulator\Echo1_Core\Engine\MaterialProperties.cs
 using Echo1.Core.Radar;
+using Echo1.Core.Multiphysics;
 using System.Numerics;
 using Complex = System.Numerics.Complex;
 
@@ -48,6 +49,15 @@ public sealed class MaterialProperties
 	/// <summary>Coating layer thickness in metres (0 = bare metal)</summary>
 	public double LayerThicknessM { get; init; } = 0.0;
 
+	public SurfaceThermalMaterial Thermal { get; init; } = SurfaceThermalMaterial.GenericMetal;
+
+	public double ReferenceTemperatureK { get; init; } = 293.15;
+
+	// Fractional change per kelvin. Start at zero until you have measured data.
+
+	public double PermittivityTemperatureCoefficientPerK { get; init; } = 0.0;
+	public double PermeabilityTemperatureCoefficientPerK { get; init; } = 0.0;
+
 	/// <summary>
 	/// Compute Fresnel monostatic reflection coefficient for a given incidence angle
 	/// and polarisation. Returns a complex scalar multiplier for the PO amplitude.
@@ -57,7 +67,11 @@ public sealed class MaterialProperties
 	///
 	/// For RAM coating: uses single-layer impedance model.
 	/// </summary>
-	public Complex FresnelReflection(double cosTheta, Polarisation pol)
+	public Complex FresnelReflection(
+		double cosTheta,
+		Polarisation pol,
+		double frequencyHz,
+		double temperatureK)
 	{
 		if (IsPec)
 		{
@@ -65,56 +79,49 @@ public sealed class MaterialProperties
 			{
 				Polarisation.VV => Complex.One,
 				Polarisation.HH => -Complex.One,
-				Polarisation.HV => Complex.Zero,
-				Polarisation.VH => Complex.Zero,
-				_ => Complex.One
+				_ => Complex.Zero
 			};
 		}
 
-		// Dielectric coating on PEC ground plane
-		// sinTheta from cosTheta:
+		cosTheta = Math.Clamp(cosTheta, 1e-9, 1.0);
+
+		double deltaT = temperatureK - ReferenceTemperatureK;
+		double erScale = Math.Max(1e-6,
+			1.0 + PermittivityTemperatureCoefficientPerK * deltaT);
+		double mrScale = Math.Max(1e-6,
+			1.0 + PermeabilityTemperatureCoefficientPerK * deltaT);
+
+		Complex er = RelativePermittivity * erScale;
+		Complex mr = RelativePermeability * mrScale;
+		Complex refractiveIndex = Complex.Sqrt(er * mr);
+
 		double sinTheta2 = 1.0 - cosTheta * cosTheta;
-		Complex er = RelativePermittivity;
-		Complex mr = RelativePermeability;
-		Complex sqrtEm = ComplexSqrt(er * mr);
+		Complex cosThetaInLayer = Complex.Sqrt(1.0 - sinTheta2 / (er * mr));
 
-		// Propagation constant in coating
-		double k0 = 2.0 * Math.PI / PhysicsConstants.C; // at 1 Hz — caller scales by freq
-														// Note: k0 is multiplied externally; here we work with normalised expressions.
-														// Internal angle cos via Snell:
-		Complex cosT_d = ComplexSqrt(1.0 - sinTheta2 / (er * mr));
+		double k0 = 2.0 * Math.PI * frequencyHz / PhysicsConstants.C;
+		Complex phaseThickness =
+			k0 * refractiveIndex * cosThetaInLayer * LayerThicknessM;
 
-		// Single-layer input impedance (no transmission; PEC ground plane → Γ_metal = -1)
-		// Z_in normalized to Z_0:
-		double betaT = LayerThicknessM; // pre-multiplied by k_d outside; here kept generic
-		Complex tanArg = Complex.ImaginaryOne * sqrtEm * cosT_d * LayerThicknessM;
-		Complex tanVal = (ComplexExp(tanArg) - ComplexExp(-tanArg))
-					   / (ComplexExp(tanArg) + ComplexExp(-tanArg));
+		Complex normalizedInputImpedance =
+			Complex.ImaginaryOne
+			* (mr / cosThetaInLayer)
+			* Complex.Tan(phaseThickness);
 
-		Complex Z_norm = (mr / cosT_d) * Complex.ImaginaryOne * tanVal;
+		Complex gammaV =
+			(normalizedInputImpedance * cosTheta - 1.0)
+			/ (normalizedInputImpedance * cosTheta + 1.0);
 
-		Complex gamma_V = (Z_norm * cosTheta - 1.0) / (Z_norm * cosTheta + 1.0);
-		Complex gamma_H = (Z_norm - cosTheta) / (Z_norm + cosTheta);
+		Complex gammaH =
+			(normalizedInputImpedance - cosTheta)
+			/ (normalizedInputImpedance + cosTheta);
 
 		return pol switch
 		{
-			Polarisation.VV => gamma_V,
-			Polarisation.HH => gamma_H,
+			Polarisation.VV => gammaV,
+			Polarisation.HH => gammaH,
 			_ => Complex.Zero
 		};
 	}
-
-	private static Complex ComplexSqrt(Complex c)
-	{
-		double r = c.Magnitude;
-		double theta = Math.Atan2(c.Imaginary, c.Real);
-		return new Complex(Math.Sqrt(r) * Math.Cos(theta / 2),
-						   Math.Sqrt(r) * Math.Sin(theta / 2));
-	}
-
-	private static Complex ComplexExp(Complex c)
-		=> new(Math.Exp(c.Real) * Math.Cos(c.Imaginary),
-			   Math.Exp(c.Real) * Math.Sin(c.Imaginary));
 
 	/// <summary>
 	/// Factory: RAM coating parameterized by relative permittivity and thickness.
@@ -127,14 +134,15 @@ public sealed class MaterialProperties
 			IsPec = false,
 			RelativePermittivity = epsilon_r,
 			RelativePermeability = mu_r ?? Complex.One,
-			LayerThicknessM = thicknessM
+			LayerThicknessM = thicknessM,
+			Thermal = SurfaceThermalMaterial.GenericCoating
 		};
 }
 
-/// <summary>
-/// Predefined common materials for convenience.
-/// </summary>
-public static class KnownMaterials
+	/// <summary>
+	/// Predefined common materials for convenience.
+	/// </summary>
+	public static class KnownMaterials
 {
 	/// Typical carbon-loaded foam (Eccosorb-like), ε_r ≈ 3.5 - j1.0, 10mm
 	public static MaterialProperties CarbonFoam10mm =>

@@ -272,6 +272,19 @@
                                HorizontalAlignment="Center" Content=""/>
                     </StackPanel>
                 </GroupBox>
+                <GroupBox>
+                    <StackPanel>
+                        <Label Content="EM heating uses RadarConfig.IncidentPowerFluxWm2."
+                                Style="{StaticResource PanelLabel}"
+                                FontSize="10"/>
+
+                        <Button Content="Advance EM–thermal–fluid step"
+                                Style="{StaticResource ActionButton}"
+                                Margin="0,6,0,0"
+                                Padding="0,6"
+                                Click="RunMultiphysicsStep_Click"/>
+                    </StackPanel>
+                </GroupBox>
 
                 <!-- ── Display ──────────────────────────────────────────── -->
                 <GroupBox Header="Display" Foreground="#8BA5C9" Margin="8,4,8,8">
